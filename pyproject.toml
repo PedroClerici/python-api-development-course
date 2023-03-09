@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "python-api-development-course"
+version = "0.1.0"
+description = ""
+authors = ["Pedro Clerici <pedro.clerici@tutamail.com>"]
+readme = "README.md"
+packages = [{include = "python_api_development_course"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["all"], version = "^0.93.0"}
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
