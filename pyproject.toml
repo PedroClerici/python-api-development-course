@@ -9,6 +9,7 @@ packages = [{include = "python_api_development_course"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = {extras = ["all"], version = "^0.93.0"}
+psycopg2 = "^2.9.5"
 
 
 [tool.poetry.group.dev.dependencies]
