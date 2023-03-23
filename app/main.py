@@ -1,8 +1,15 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Depends, Response, status, HTTPException
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
 import time
+
+from . import models
+from .database import engine, get_db
+
+# Create database tables if they don't exist
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -32,70 +39,65 @@ while True:
 
 
 @app.post("/post", status_code=status.HTTP_201_CREATED)
-def create_posts(payload: Post):
-    cursor.execute(
-        """
-        INSERT INTO posts (title, content, published)
-            VALUES (%s, %s, %s) RETURNING *
-        """,
-        (payload.title, payload.content, payload.published)
-    )
-    new_post = cursor.fetchone()
-    connection.commit()
+def create_posts(payload: Post, db: Session = Depends(get_db)):
+    # Create a new post based on the model
+    new_post = models.Post(title=payload.title, content=payload.content,
+                           published=payload.published)
+    # You can also create a post model by just unpacking the payload:
+    # new_post = models.Post(**payload)
+
+    # Add the new post to the database
+    db.add(new_post)
+    # Commits changes to the database
+    db.commit()
+    # Retrieves the new post created from the database
+    db.refresh(new_post)
+
     return {"data": new_post}
 
 
 @app.get("/post")
-def get_posts():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
+def get_posts(db: Session = Depends(get_db)):
+    # Gets every post from the posts table
+    posts = db.query(models.Post).all()
     return {"posts": posts}
 
 
 @app.get("/post/latest")
-def get_latest_post():
-    cursor.execute(
-        """SELECT * FROM posts ORDER BY created_at DESC""",
-        (id,)
-    )
-    post = cursor.fetchone()
-    return post
+def get_latest_post(db: Session = Depends(get_db)):
+    latest_post = db.query(models.Post)\
+        .order_by(models.Post.published.desc())\
+        .first()
+    if not latest_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id: {id} was not found")
+    return {"post": latest_post}
 
 
 @app.get("/post/{id}")
-def get_post(id: int):
-    cursor.execute("""SELECT * FROM posts WHERE id = %s""", (id,))
-    post = cursor.fetchone()
-    print(post)
+def get_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id).one()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} was not found")
-    return post
+    return {"post": post}
 
 
 @app.delete("/post/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *""", (id,))
-    post = cursor.fetchone()
-    connection.commit()
-    if not post:
+def delete_post(id: int, db: Session = Depends(get_db)):
+    is_deleted = db.query(models.Post).filter(models.Post.id == id).delete()
+    db.commit()
+    if not is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} was not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/post/{id}")
-def update_post(payload: Post, id: int):
-    cursor.execute(
-        """
-        UPDATE posts SET title = %s, content = %s, published = %s
-            WHERE id = %s RETURNING *
-        """,
-        (payload.title, payload.content, payload.published, id)
-    )
-    post = cursor.fetchone()
-    connection.commit()
-    if not post:
+def update_post(payload: Post, id: int, db: Session = Depends(get_db)):
+    updated_post = db.query(models.Post).filter(models.Post.id == id)\
+            .update(**payload.dict(), synchronize_session="evaluate")
+    if not updated_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} was not found")
-    return {"data": post}
+    return {"data": update_post}
