@@ -12,6 +12,7 @@ fastapi = {extras = ["all"], version = "^0.93.0"}
 psycopg2 = "^2.9.5"
 sqlalchemy = "1.4.23"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pyjwt = "^2.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
