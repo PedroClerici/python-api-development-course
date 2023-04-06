@@ -16,7 +16,7 @@ def login(payload: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Invalid credentials")
+                            detail=f"User {payload.username} not found")
 
     if not utils.validate_password(payload.password, user.password):
         raise HTTPException(status_code=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION,

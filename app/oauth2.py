@@ -41,6 +41,7 @@ def verify_access_token(token: Annotated[str, Depends(oauth2_scheme)],
         token_data = schemas.TokenData(id=id)
     except JWTError:
         raise credentials_exception
+
     return token_data
 
 

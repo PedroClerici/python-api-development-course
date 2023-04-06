@@ -1,5 +1,6 @@
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
+from typing import List
 
 from .. import models, schemas, utils
 from ..database import get_db
@@ -19,6 +20,13 @@ def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@router.get("/", response_model=List[schemas.User])
+def get_users(db: Session = Depends(get_db)):
+    users = db.query(models.User).all()
+
+    return users
 
 
 @router.get("/{id}", response_model=schemas.User)

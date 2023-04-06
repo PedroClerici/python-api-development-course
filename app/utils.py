@@ -3,7 +3,7 @@ password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str):
-    password_context.hash(password)
+    return password_context.hash(password)
 
 
 def validate_password(plain_password: str, hashed_password: str):

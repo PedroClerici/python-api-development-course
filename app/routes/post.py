@@ -21,9 +21,10 @@ def create_posts(payload: schemas.PostCreate, db: Session = Depends(get_db),
 
 
 @router.get("/", response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(limit: int = None, db: Session = Depends(get_db)):
     # Gets every post from the posts table
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).limit(limit).all()
+
     return posts
 
 
@@ -84,4 +85,4 @@ def update_post(payload: schemas.PostUpdate, id: int,
                             detail="Not authorized to perform requested action")
 
     db.commit()
-    return post.first()
+    return post
