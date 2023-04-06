@@ -7,6 +7,7 @@ from typing import Annotated
 
 from . import schemas, models
 from .database import get_db
+from .settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
@@ -16,9 +17,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 # To get a string like this run:
 # $ openssl rand -hex 32
-SECRET_KEY = "0df03c6088f51940e6d5e2642e3d206a75b7968b064f166a4da36f4ed6d48e59"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 
 def create_access_token(data: dict):
