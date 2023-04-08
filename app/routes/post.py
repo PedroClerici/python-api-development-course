@@ -1,6 +1,8 @@
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
-from typing import List
+# from sqlalchemy.sql.functions import func
+from sqlalchemy import func
+from typing import List, Optional
 
 from .. import models, schemas, oauth2
 from ..database import get_db
@@ -20,30 +22,45 @@ def create_posts(payload: schemas.PostCreate, db: Session = Depends(get_db),
     return new_post
 
 
-@router.get("/", response_model=List[schemas.Post])
-def get_posts(limit: int = None, db: Session = Depends(get_db)):
-    # Gets every post from the posts table
-    posts = db.query(models.Post).limit(limit).all()
+@router.get("/", response_model=List[schemas.PostOut])
+def get_posts(limit: int = None, skip: int = 0, 
+              search: Optional[str] = "", db: Session = Depends(get_db)):
+
+    posts = db.query(models.Post, func.count(models.Vote.post_id).label("votes"))\
+        .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)\
+        .filter(models.Post.title.contains(search))\
+        .group_by(models.Post.id)\
+        .limit(limit)\
+        .offset(skip)\
+        .all()
 
     return posts
 
 
-@router.get("/latest", response_model=schemas.Post)
+@router.get("/latest", response_model=schemas.PostOut)
 def get_latest_post(db: Session = Depends(get_db)):
-    post = db.query(models.Post)\
-        .order_by(models.Post.published.desc())\
+    post = db.query(models.Post, func.count(models.Vote.user_id).label("votes"))\
+        .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)\
+        .group_by(models.Post.id)\
+        .order_by(models.Post.published.asc())\
         .first()
 
     if not post:
         raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Post with id: {id} was not found")
+
     return post
 
 
-@router.get("/{id}", response_model=schemas.Post)
+@router.get("/{id}", response_model=schemas.PostOut)
 def get_post(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(models.Post, func.count(models.Vote.user_id).label("votes"))\
+        .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)\
+        .group_by(models.Post.id)\
+        .filter(models.Post.id == id)\
+        .first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Post with id: {id} was not found")
