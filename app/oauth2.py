@@ -9,11 +9,7 @@ from . import schemas, models
 from .database import get_db
 from .settings import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
-
-# Secret key
-# Algorithm
-# Expiration time
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # To get a string like this run:
 # $ openssl rand -hex 32

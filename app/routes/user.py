@@ -26,6 +26,7 @@ def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db)):
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
 
+
     return users
 
 
