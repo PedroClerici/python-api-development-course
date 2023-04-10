@@ -4,15 +4,14 @@ version = "0.1.0"
 description = ""
 authors = ["Pedro Clerici <pedro.clerici@tutamail.com>"]
 readme = "README.md"
-packages = [{include = "python_api_development_course"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = {extras = ["all"], version = "^0.93.0"}
-psycopg2 = "^2.9.5"
 sqlalchemy = "1.4.23"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+psycopg2-binary = "^2.9.6"
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.2"
